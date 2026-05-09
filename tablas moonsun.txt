@@ -1,0 +1,67 @@
+CREATE TABLE `calculo` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `fecha` date NOT NULL,
+  `titulo` varchar(100) NOT NULL DEFAULT 'PRIMER PEDIDO',
+  `codigo` varchar(100) DEFAULT NULL,
+  `categoria` varchar(50) DEFAULT NULL,
+  `sabor` varchar(100) DEFAULT NULL,
+  `cantidad` int(11) DEFAULT NULL,
+  `costopz` decimal(10,2) DEFAULT NULL,
+  `inversion` decimal(10,2) DEFAULT NULL,
+  `preciov` decimal(10,2) DEFAULT NULL,
+  `ganaciau` decimal(10,2) DEFAULT NULL,
+  `ganacial` decimal(10,2) DEFAULT NULL,
+  `ingresob` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `codigo` (`codigo`),
+  KEY `categoria` (`categoria`),
+  KEY `sabor` (`sabor`),
+  CONSTRAINT `calculo_ibfk_1` FOREIGN KEY (`codigo`) REFERENCES `paletaslunitas` (`codigo`) ON UPDATE CASCADE,
+  CONSTRAINT `calculo_ibfk_2` FOREIGN KEY (`categoria`) REFERENCES `categorias` (`nombre`) ON UPDATE CASCADE,
+  CONSTRAINT `calculo_ibfk_3` FOREIGN KEY (`sabor`) REFERENCES `paletaslunitas` (`nombre`) ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+CREATE TABLE `paletasmoonsunpops` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `codigo` varchar(100) DEFAULT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `categoria` varchar(50) DEFAULT NULL,
+  `costo` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nombre` (`nombre`),
+  UNIQUE KEY `codigo` (`codigo`),
+  KEY `categoria` (`categoria`),
+  CONSTRAINT `paletasmoonsunpops_ibfk_1` FOREIGN KEY (`codigo`) REFERENCES `paletaslunitas` (`codigo`) ON UPDATE CASCADE,
+  CONSTRAINT `paletasmoonsunpops_ibfk_2` FOREIGN KEY (`nombre`) REFERENCES `paletaslunitas` (`nombre`) ON UPDATE CASCADE,
+  CONSTRAINT `paletasmoonsunpops_ibfk_3` FOREIGN KEY (`categoria`) REFERENCES `categorias` (`nombre`) ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+CREATE TABLE `paletaslunitas` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `codigo` varchar(100) DEFAULT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `categoria` varchar(50) DEFAULT NULL,
+  `costo` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nombre` (`nombre`),
+  UNIQUE KEY `codigo` (`codigo`),
+  KEY `categoria` (`categoria`),
+  CONSTRAINT `paletaslunitas_ibfk_1` FOREIGN KEY (`categoria`) REFERENCES `categorias` (`nombre`) ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `categorias` (
+  `nombre` varchar(50) NOT NULL,
+  PRIMARY KEY (`nombre`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `usuarios` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `usuario` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `rol` enum('admin','general') NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `usuario` (`usuario`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
