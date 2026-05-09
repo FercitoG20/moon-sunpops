@@ -1,0 +1,122 @@
+.dashboard-inicio {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    width: 100%;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.04);
+    text-align: center;
+    border-top: 4px solid #E8A598;
+}
+
+.stat-card h3 {
+    font-size: 0.95rem;
+    color: #8A817C;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.stat-card p {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #332D2B;
+}
+
+.charts-calc-container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+.chart-section, .calc-section {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.04);
+}
+
+.chart-section h2, .calc-section h2 {
+    font-size: 1.2rem;
+    color: #332D2B;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.calc-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.input-box {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.input-box label {
+    font-size: 0.85rem;
+    color: #8A817C;
+}
+
+.input-box input {
+    padding: 12px;
+    border: 1px solid #EAE0D5;
+    border-radius: 8px;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+}
+
+.input-box input:focus {
+    border-color: #E8A598;
+}
+
+.btn-calc {
+    background: #E8A598;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 10px;
+    transition: 0.3s;
+}
+
+.btn-calc:hover {
+    background: #D69487;
+}
+
+.result-box {
+    margin-top: 20px;
+    padding: 15px;
+    background: #FDFBF7;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    color: #332D2B;
+    display: none;
+}
+
+@media (max-width: 992px) {
+    .charts-calc-container {
+        grid-template-columns: 1fr;
+    }
+}
