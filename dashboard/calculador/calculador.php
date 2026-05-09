@@ -44,7 +44,8 @@ if(isset($_POST['agregar']) && $titulo_activo != "") {
         if($p) {
             $sql = "INSERT INTO calculo (fecha, titulo, codigo, categoria, sabor, cantidad, costopz, inversion, preciov, ganaciau, ganacial, ingresob) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $conexion->prepare($sql)->execute([$fecha_activa, $titulo_activo, $codigo, $p['categoria'], $p['nombre'], $cantidad, $p['costo'], ($cantidad * $p['costo']), $preciov, ($preciov - $p['costo']), (($preciov - $p['costo']) * $cantidad), ($cantidad * $preciov)]);
-            echo "<script>window.location.href='dashboard.php?view=calculador&fecha_activa=$fecha_activa&titulo_activo=" . urlencode($titulo_activo) . "';</script>"; exit();
+            // Al agregar, redirigimos manteniendo el foco
+            echo "<script>window.location.href='dashboard.php?view=calculador&fecha_activa=$fecha_activa&titulo_activo=" . urlencode($titulo_activo) . "&focus=selector';</script>"; exit();
         }
     }
 }
@@ -70,38 +71,38 @@ $datos = $stmt_datos->fetchAll(PDO::FETCH_ASSOC);
 
 <div class="premium-calc-container">
     <div class="header-main">
-        <h2><i class="fa-solid fa-calculator"></i> Calculador de Pedidos <span>Moon & Sun Pops</span></h2>
+        <h2><i class="fa-solid fa-calculator"></i> Consola <span>Moon & Sun Pops</span></h2>
     </div>
 
-    <?php if($mensaje_error): ?><div class="alerta alerta-error"><?=$mensaje_error?></div><?php endif; ?>
-    <?php if($mensaje_exito): ?><div class="alerta alerta-exito"><?=$mensaje_exito?></div><?php endif; ?>
+    <?php if($mensaje_error): ?><div class="alerta alerta-error"><i class="fa-solid fa-triangle-exclamation"></i> <?=$mensaje_error?></div><?php endif; ?>
+    <?php if($mensaje_exito): ?><div class="alerta alerta-exito"><i class="fa-solid fa-wand-magic-sparkles"></i> <?=$mensaje_exito?></div><?php endif; ?>
 
     <div class="top-grid">
-        <div class="premium-card">
-            <div class="card-title-choco"><i class="fa-solid fa-file-circle-plus"></i> Nuevo Pedido</div>
+        <div class="premium-card shadow-choco">
+            <div class="card-title-choco"><i class="fa-solid fa-sun"></i> Iniciar Nuevo Lote</div>
             <form method="GET" action="dashboard.php" class="form-choco">
                 <input type="hidden" name="view" value="calculador">
-                <div class="input-box grow"><label>Título del Lote</label><input type="text" name="nuevo_titulo" required placeholder="Ej: Pedido Semanal"></div>
+                <div class="input-box grow"><label>Nombre del Pedido</label><input type="text" name="nuevo_titulo" required placeholder="Ej: Vainilla Solar"></div>
                 <div class="input-box"><label>Fecha</label><input type="date" name="fecha_creacion" value="<?=date('Y-m-d')?>"></div>
-                <button type="submit" name="crear_pedido" class="btn-choco">Crear</button>
+                <button type="submit" name="crear_pedido" class="btn-choco-gradient">CREAR</button>
             </form>
         </div>
 
-        <div class="premium-card">
-            <div class="card-title-choco"><i class="fa-solid fa-magnifying-glass"></i> Buscar Historial</div>
+        <div class="premium-card shadow-gold">
+            <div class="card-title-choco"><i class="fa-solid fa-moon"></i> Rastrear Historial</div>
             <form method="GET" action="dashboard.php" class="form-choco">
                 <input type="hidden" name="view" value="calculador">
                 <div class="input-box grow">
-                    <label>Seleccionar Lote</label>
+                    <label>Lotes Guardados</label>
                     <select name="filtro_lista">
-                        <option value="">-- Recientes --</option>
+                        <option value="">-- Seleccionar --</option>
                         <?php
                         $list = $conexion->query("SELECT DISTINCT titulo FROM calculo ORDER BY id DESC LIMIT 10");
                         while($opt = $list->fetch(PDO::FETCH_ASSOC)) { echo "<option value='".htmlspecialchars($opt['titulo'])."'>{$opt['titulo']}</option>"; }
                         ?>
                     </select>
                 </div>
-                <button type="submit" name="buscar_pedido" class="btn-gold">Cargar</button>
+                <button type="submit" name="buscar_pedido" class="btn-gold-gradient">BUSCAR</button>
             </form>
         </div>
     </div>
@@ -109,18 +110,18 @@ $datos = $stmt_datos->fetchAll(PDO::FETCH_ASSOC);
     <?php if($titulo_activo != ""): ?>
         <div class="status-bar-premium">
             <div class="status-info">
-                <i class="fa-solid fa-ice-cream"></i> Editando: <strong id="pdfTitulo"><?=htmlspecialchars($titulo_activo)?></strong>
+                <i class="fa-solid fa-ice-cream"></i> <strong id="pdfTitulo"><?=htmlspecialchars($titulo_activo)?></strong>
                 <span class="badge-date" id="pdfFecha"><?=$fecha_activa?></span>
             </div>
-            <button id="btnExportarPDF" class="btn-pdf-premium"><i class="fa-solid fa-file-pdf"></i> GENERAR ORDEN PDF</button>
+            <button id="btnExportarPDF" class="btn-pdf-elegant"><i class="fa-solid fa-file-pdf"></i> IMPRIMIR ORDEN</button>
         </div>
 
         <div class="premium-card entry-section">
             <form method="POST" action="dashboard.php?view=calculador&fecha_activa=<?=$fecha_activa?>&titulo_activo=<?=urlencode($titulo_activo)?>" class="form-choco">
                 <div class="input-box grow">
-                    <label>Sabor de Paleta</label>
+                    <label>Sabor de la Paleta</label>
                     <select name="codigo" id="selectorPaleta" required>
-                        <option value="">Selecciona un sabor...</option>
+                        <option value="">¿Qué sabor agregaremos?</option>
                         <?php
                         $pal = $conexion->query("SELECT L.codigo, L.nombre, L.costo, M.costo AS venta FROM paletaslunitas L INNER JOIN paletasmoonsunpops M ON L.codigo = M.codigo ORDER BY L.nombre ASC");
                         while($p = $pal->fetch(PDO::FETCH_ASSOC)) {
@@ -129,10 +130,12 @@ $datos = $stmt_datos->fetchAll(PDO::FETCH_ASSOC);
                         ?>
                     </select>
                 </div>
-                <div class="input-box width-small"><label>Costo</label><input type="text" id="costoProveedor" class="readonly-gold" readonly></div>
-                <div class="input-box width-small"><label>Cant.</label><input type="number" name="cantidad" id="inputCantidad" required min="1" value="1"></div>
-                <div class="input-box width-small"><label>P. Venta</label><input type="number" step="0.01" name="preciov" id="inputVenta" class="readonly-gold" readonly></div>
-                <button type="submit" name="agregar" class="btn-choco">AGREGAR</button>
+                <div class="input-box-row">
+                    <div class="sub-input"><label>Costo</label><input type="text" id="costoProveedor" class="readonly-gold" readonly></div>
+                    <div class="sub-input"><label>Cant.</label><input type="number" name="cantidad" id="inputCantidad" required min="1" value="1"></div>
+                    <div class="sub-input"><label>Venta</label><input type="number" step="0.01" name="preciov" id="inputVenta" class="readonly-gold" readonly></div>
+                </div>
+                <button type="submit" name="agregar" class="btn-add-premium">✚ AGREGAR</button>
             </form>
         </div>
     <?php endif; ?>
@@ -186,7 +189,8 @@ $datos = $stmt_datos->fetchAll(PDO::FETCH_ASSOC);
             <?php if($datos): ?>
             <tfoot>
                 <tr class="footer-premium">
-                    <td colspan="4" class="text-right">TOTALES:</td>
+                    <td colspan="4" class="mobile-hide text-right">TOTALES:</td>
+                    <td class="mobile-show-only text-right" colspan="4" style="display:none;">TOTALES:</td>
                     <td><?=$t_cant?> pz</td>
                     <td></td>
                     <td class="text-red">$<?=number_format($t_inv, 2)?></td>

@@ -14,6 +14,10 @@
     min-height: 100vh;
     font-family: 'Poppins', sans-serif;
     color: var(--choco-dark);
+    border-radius: 20px;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden; /* Evita cualquier desbordamiento global */
 }
 
 .header-premium {
@@ -32,8 +36,24 @@
 .header-premium h1 span { color: var(--caramel); font-weight: 300; }
 .header-premium p { margin: 0; color: #888; font-size: 0.9rem; }
 
-/* Cards */
-.grid-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-bottom: 30px; }
+/* Cards Layout - LA SOLUCIÓN AL DESBORDAMIENTO */
+.grid-layout { 
+    display: flex; 
+    flex-wrap: wrap; /* Magia: si no caben de lado, se van abajo automáticamente */
+    gap: 25px; 
+    margin-bottom: 30px; 
+    width: 100%;
+}
+
+.card-choco {
+    flex: 2 1 350px; /* Crece si hay espacio, pero no se encoge menos de 350px antes de saltar */
+    min-width: 0;
+}
+
+.card-caramel {
+    flex: 1 1 250px; /* Igual aquí, asegurando que encaje bonito */
+    min-width: 0;
+}
 
 .card {
     background: var(--white);
@@ -55,9 +75,21 @@
 }
 
 /* Form Styles */
-.input-row { display: flex; gap: 15px; margin-bottom: 15px; }
-.input-group { display: flex; flex-direction: column; gap: 5px; }
-.input-group.grow { flex-grow: 1; }
+.input-row { 
+    display: flex; 
+    flex-wrap: wrap; /* También aplicamos wrap a los inputs por si acaso */
+    gap: 15px; 
+    margin-bottom: 15px; 
+}
+
+.input-group { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 5px; 
+    flex: 1 1 140px; /* Los inputs se adaptan y apilan si es necesario */
+}
+
+.input-group.grow { flex: 2 1 200px; }
 .input-group label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--caramel); }
 
 input, select {
@@ -67,6 +99,7 @@ input, select {
     outline: none;
     transition: 0.3s;
     font-size: 0.9rem;
+    width: 100%;
 }
 
 input:focus { border-color: var(--caramel); box-shadow: 0 0 0 4px rgba(188, 108, 37, 0.1); }
@@ -111,10 +144,11 @@ input:focus { border-color: var(--caramel); box-shadow: 0 0 0 4px rgba(188, 108,
     border-radius: 25px;
     padding: 20px;
     box-shadow: 0 15px 35px rgba(0,0,0,0.05);
-    overflow-x: auto;
+    overflow-x: auto; /* IMPORTANTE: Permite deslizar la tabla lateralmente en celular */
+    width: 100%;
 }
 
-.table-premium { width: 100%; border-collapse: collapse; min-width: 900px; }
+.table-premium { width: 100%; border-collapse: collapse; min-width: 800px; }
 .table-premium th {
     text-align: left;
     padding: 15px;
@@ -161,4 +195,20 @@ input:focus { border-color: var(--caramel); box-shadow: 0 0 0 4px rgba(188, 108,
 .alerta-exito { background: #d1fae5; color: #065f46; border-left: 5px solid #10b981; }
 .alerta-error { background: #fee2e2; color: #991b1b; border-left: 5px solid #ef4444; }
 
-@media (max-width: 1000px) { .grid-layout { grid-template-columns: 1fr; } }
+
+/* =========================================
+   ADAPTACIÓN EXTREMA PARA CELULARES
+   ========================================= */
+@media (max-width: 1000px) { 
+    .grid-layout { flex-direction: column; } 
+    .card-choco, .card-caramel { flex: 1 1 100%; width: 100%; }
+}
+
+@media (max-width: 768px) {
+    .main-container { padding: 15px; }
+    .header-premium h1 { font-size: 1.6rem; }
+    .card, .table-card { padding: 15px; }
+    .input-row { flex-direction: column; gap: 10px; }
+    .table-premium td, .table-premium th { padding: 10px; }
+    .btn-premium { margin-top: 10px; }
+}

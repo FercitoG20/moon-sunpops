@@ -65,7 +65,7 @@ if (isset($_GET['eliminar_producto'])) {
     } catch (PDOException $e) { $mensaje_error = "Error al eliminar."; }
 }
 
-$catalogo = $conexion->query("SELECT l.codigo, l.nombre, l.categoria, l.costo AS costo_lunitas, m.costo AS precio_venta 
+$catalogo = $conexion->query("SELECT l.codigo, l.nombre, l.categoria, l.costo AS costo_lunitas, m.costo AS precio_venta  
                  FROM paletaslunitas l LEFT JOIN paletasmoonsunpops m ON l.codigo = m.codigo ORDER BY l.categoria, l.nombre ASC")->fetchAll(PDO::FETCH_ASSOC);
 $categorias = $conexion->query("SELECT nombre FROM categorias ORDER BY nombre ASC")->fetchAll(PDO::FETCH_ASSOC);
 ?>

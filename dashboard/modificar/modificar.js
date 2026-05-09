@@ -1,8 +1,3 @@
-/**
- * Moon & Sun - Sistema de edición Inline
- * Fernando, este código maneja el cambio visual de texto a input
- */
-
 function activarEdicion(codigo) {
     // 1. Ocultamos el texto estático de los precios
     document.getElementById('txt_costo_' + codigo).style.display = 'none';

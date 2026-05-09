@@ -16,9 +16,21 @@ switch ($view) {
     case 'calculador':
         require 'calculador/calculador.php';
         break;
-        
+
+    case 'pedidos':
+        require 'pedidos/pedidos.php'; 
+        break;
+
     case 'modificar':
         require 'modificar/modificar.php'; 
+        break;
+    
+    case 'inventario':
+        require 'inventario/inventario.php'; 
+        break;
+
+    case 'estadisticas':
+        require 'estadisticas/estadisticas.php'; 
         break;
         
     case 'ventas':

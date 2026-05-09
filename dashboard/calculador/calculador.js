@@ -1,44 +1,65 @@
 document.addEventListener('DOMContentLoaded', () => {
     
+    // 1. Lógica de enfoque y selección automática
     const selectorPaleta = document.getElementById('selectorPaleta');
+    const inputCantidad = document.getElementById('inputCantidad');
+
+    // Verificar si venimos de un insert (redirigido por PHP)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('focus') === 'selector') {
+        selectorPaleta.focus();
+    }
+
     if(selectorPaleta) {
         selectorPaleta.addEventListener('change', function() {
             const opt = this.options[this.selectedIndex];
             if(this.value !== "") {
                 document.getElementById("costoProveedor").value = opt.getAttribute("data-costo");
                 document.getElementById("inputVenta").value = opt.getAttribute("data-venta");
-                document.getElementById("inputCantidad").focus();
+                
+                // Enfocar cantidad y seleccionar el texto para velocidad
+                inputCantidad.focus();
+                inputCantidad.select();
+            } else {
+                document.getElementById("costoProveedor").value = "";
+                document.getElementById("inputVenta").value = "";
             }
         });
     }
 
+    // 2. Generador de PDF (Rediseño de diseño Premium)
     const btnPdf = document.getElementById('btnExportarPDF');
     if(btnPdf) {
         btnPdf.addEventListener('click', function() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
 
-            const titulo = document.getElementById('pdfTitulo')?.innerText || 'PEDIDO';
+            const titulo = document.getElementById('pdfTitulo')?.innerText || 'ORDEN';
             const fecha = document.getElementById('pdfFecha')?.innerText || '';
 
-            doc.setFillColor(45, 27, 20);
-            doc.rect(0, 0, 210, 40, 'F');
+            // --- CABECERA DE IMPACTO ---
+            doc.setFillColor(45, 27, 20); // Choco
+            doc.rect(0, 0, 210, 45, 'F');
             
             doc.setTextColor(255, 255, 255);
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(22);
+            doc.setFontSize(26);
             doc.text("MOON & SUN POPS", 15, 20);
             
             doc.setFontSize(10);
             doc.setFont("helvetica", "normal");
-            doc.text("SISTEMA DE CONTROL DE INVENTARIO Y COSTOS", 15, 28);
+            doc.text("DOCUMENTO DE CARGA E INVERSIÓN OPERATIVA", 15, 28);
             
+            // Detalles Oro
             doc.setTextColor(212, 163, 115);
+            doc.setFontSize(14);
+            doc.text(`LOTE: ${titulo.toUpperCase()}`, 15, 38);
             doc.setFontSize(12);
-            doc.text(`LOTE: ${titulo.toUpperCase()}`, 15, 35);
-            doc.text(`FECHA: ${fecha}`, 160, 35);
+            doc.text(`FECHA: ${fecha}`, 160, 38);
+
+            // Datos de la tabla
             const filas = document.querySelectorAll('.pdf-data-row');
-            let data = [];
+            let dataTable = [];
             let totalPz = 0;
             let totalInv = 0;
 
@@ -50,16 +71,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 totalPz += parseInt(cant);
                 totalInv += parseFloat(inv.replace('$', '').replace(',', ''));
-                data.push([sabor, costo, cant, inv]);
+                dataTable.push([sabor, costo, cant, inv]);
             });
 
+            // --- TABLA FORMAL ---
             doc.autoTable({
-                startY: 50,
-                head: [['SABOR / PRODUCTO', 'COSTO UNIT.', 'CANTIDAD', 'INVERSIÓN TOTAL']],
-                body: data,
+                startY: 55,
+                head: [['DESCRIPCIÓN DEL PRODUCTO', 'COSTO U.', 'CANTIDAD', 'SUBTOTAL']],
+                body: dataTable,
                 theme: 'grid',
-                styles: { font: 'helvetica', fontSize: 9, cellPadding: 3 },
-                headStyles: { fillColor: [78, 52, 46], textColor: [255, 255, 255], halign: 'center' },
+                styles: { font: 'helvetica', fontSize: 10, cellPadding: 4 },
+                headStyles: { fillColor: [45, 27, 20], textColor: [255, 255, 255], halign: 'center', fontStyle: 'bold' },
                 columnStyles: {
                     0: { cellWidth: 80 },
                     1: { halign: 'center' },
@@ -68,24 +90,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            // --- CUADRO DE RESUMEN ---
             const finalY = doc.lastAutoTable.finalY + 10;
             doc.setDrawColor(188, 108, 37);
+            doc.setLineWidth(1);
             doc.setFillColor(254, 250, 224);
-            doc.rect(120, finalY, 75, 25, 'FD');
+            doc.rect(130, finalY, 65, 25, 'FD');
 
             doc.setTextColor(45, 27, 20);
             doc.setFontSize(10);
-            doc.text(`TOTAL PIEZAS:`, 125, finalY + 10);
-            doc.text(`${totalPz} pz`, 185, finalY + 10, { align: 'right' });
-
-            doc.setFontSize(12);
             doc.setFont("helvetica", "bold");
-            doc.text(`TOTAL:`, 125, finalY + 20);
-            doc.text(`$${totalInv.toLocaleString('en-US', {minimumFractionDigits: 2})}`, 185, finalY + 20, { align: 'right' });
+            doc.text(`UNIDADES:`, 135, finalY + 10);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${totalPz} pz`, 188, finalY + 10, { align: 'right' });
 
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text(`TOTAL:`, 135, finalY + 20);
+            doc.text(`$${totalInv.toLocaleString('en-US', {minimumFractionDigits: 2})}`, 188, finalY + 20, { align: 'right' });
+
+            // Firma y Pie
             doc.setFontSize(8);
             doc.setTextColor(150);
-            doc.text("Este documento es un reporte generado por el sistema Moon & Sun Pops.", 105, 285, { align: "center" });
+            doc.text("Reporte generado por Sistema Moon & Sun Pops. Todos los derechos reservados.", 105, 285, { align: "center" });
 
             doc.save(`Pedido_${titulo.replace(/\s+/g, '_')}.pdf`);
         });
