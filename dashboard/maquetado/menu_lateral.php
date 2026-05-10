@@ -26,6 +26,10 @@
             <i class="fa-solid fa-chart-pie"></i> Estadisticas
         </a>
 
+        <a href="dashboard.php?view=ventas-modificadas">
+            <i class="fa-solid fa-clock-rotate-left"></i> Historial
+        </a>
+
     <?php else: ?>
 
         <a href="dashboard.php?view=ventas">

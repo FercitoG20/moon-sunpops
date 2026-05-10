@@ -1,0 +1,117 @@
+:root {
+    --choco-dark: #2d1b14;
+    --gold: #bc6c25;
+    --green-money: #10b981;
+    --red-loss: #ef4444;
+    --red-hover: #dc2626;
+}
+
+.main-container {
+    padding: 20px;
+    background: #fcfaf7;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+}
+
+.header-premium { margin-bottom: 25px; }
+.header-premium h1 { font-size: 2rem; color: var(--choco-dark); margin: 0; }
+.header-premium span { color: var(--gold); }
+.header-premium p { margin: 5px 0 0; color: #666; font-size: 0.95rem; }
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.card-header {
+    font-weight: 800;
+    color: var(--choco-dark);
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    border-bottom: 2px solid #f9f9f9;
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.card-header i { color: var(--gold); }
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.premium-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+
+.premium-table th {
+    background-color: #f8f8f8;
+    padding: 15px;
+    text-align: left;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--choco-dark);
+    border-bottom: 2px solid #eee;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.premium-table td {
+    padding: 15px;
+    border-bottom: 1px solid #f2f2f2;
+    vertical-align: middle;
+}
+
+.premium-table tr:hover { background-color: #fafafa; }
+
+.date-badge {
+    background: #f3f4f6;
+    padding: 5px 10px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    color: #555;
+    display: inline-block;
+}
+.date-badge i { color: var(--gold); margin-right: 5px; }
+
+.items-list {
+    font-size: 0.85rem;
+    color: #444;
+    line-height: 1.6;
+}
+
+.text-green { color: var(--green-money) !important; font-weight: 800; }
+.text-xl { font-size: 1.1rem; }
+
+.btn-danger {
+    background-color: #fef2f2;
+    color: var(--red-loss);
+    border: 1px solid #fca5a5;
+    padding: 8px 15px;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-danger:hover {
+    background-color: var(--red-loss);
+    color: white;
+    border-color: var(--red-loss);
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
+}
+
+@media (max-width: 600px) {
+    .header-premium h1 { font-size: 1.5rem; }
+    .card { padding: 15px; }
+}

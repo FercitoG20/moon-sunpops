@@ -1,6 +1,9 @@
 <?php
 require_once '../conexion.php';
 
+// 1. OBLIGAR A PHP A USAR LA HORA DE MÉXICO PARA EVITAR DESFASES DE DÍAS
+date_default_timezone_set('America/Mexico_City');
+
 // Inicializar el carrito en sesión si no existe
 if (!isset($_SESSION['carrito'])) {
     $_SESSION['carrito'] = [];
@@ -9,50 +12,91 @@ if (!isset($_SESSION['carrito'])) {
 $mensaje_exito = '';
 $mensaje_error = '';
 
-// --- LÓGICA DEL ESCÁNER (AGREGAR AL CARRITO) ---
-if (isset($_POST['escanear_codigo'])) {
-    $codigo = trim($_POST['codigo_escaneado']);
-    
-    // Buscar la paleta Y SU STOCK ACTUAL en la base de datos
-    $stmt = $conexion->prepare("
-        SELECT p.nombre, p.costo, COALESCE(i.stock, 0) as stock 
-        FROM paletasmoonsunpops p 
-        LEFT JOIN inventario i ON p.codigo = i.codigo 
-        WHERE p.codigo = ? LIMIT 1
-    ");
-    $stmt->execute([$codigo]);
-    $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+// Recibir errores por URL (ej. cuando llegas al límite de stock pulsando "+")
+if (isset($_GET['err']) && $_GET['err'] == 'limite') {
+    $mensaje_error = "¡Límite alcanzado! No tienes más piezas en el congelador.";
+}
 
-    if ($producto) {
-        $cantidad_actual_en_carrito = isset($_SESSION['carrito'][$codigo]) ? $_SESSION['carrito'][$codigo]['cantidad'] : 0;
+// --- LÓGICA DE ACCIONES DEL CARRITO (+, -, ELIMINAR, VACIAR) ---
+if (isset($_GET['accion'])) {
+    $accion = $_GET['accion'];
+    $codigo_act = $_GET['codigo'] ?? '';
 
-        // VALIDACIÓN DE STOCK
-        if ($producto['stock'] <= 0) {
-            $mensaje_error = "¡Agotado! Ya no hay stock disponible de " . $producto['nombre'] . ".";
-        } elseif (($cantidad_actual_en_carrito + 1) > $producto['stock']) {
-            $mensaje_error = "¡Límite alcanzado! Solo tienes " . $producto['stock'] . " piezas de " . $producto['nombre'] . " en el congelador.";
+    if ($accion == 'vaciar') {
+        $_SESSION['carrito'] = [];
+        echo "<script>window.location.href='dashboard.php?view=inicio';</script>"; exit;
+    } elseif ($accion == 'eliminar' && isset($_SESSION['carrito'][$codigo_act])) {
+        unset($_SESSION['carrito'][$codigo_act]);
+        echo "<script>window.location.href='dashboard.php?view=inicio';</script>"; exit;
+    } elseif ($accion == 'sumar' && isset($_SESSION['carrito'][$codigo_act])) {
+        if ($_SESSION['carrito'][$codigo_act]['cantidad'] < $_SESSION['carrito'][$codigo_act]['stock_max']) {
+            $_SESSION['carrito'][$codigo_act]['cantidad']++;
+            echo "<script>window.location.href='dashboard.php?view=inicio';</script>"; exit;
         } else {
-            // Si hay stock suficiente, le sumamos 1 o lo creamos
-            if (isset($_SESSION['carrito'][$codigo])) {
-                $_SESSION['carrito'][$codigo]['cantidad'] += 1;
-            } else {
-                $_SESSION['carrito'][$codigo] = [
-                    'nombre' => $producto['nombre'],
-                    'precio' => $producto['costo'],
-                    'cantidad' => 1
-                ];
-            }
+            echo "<script>window.location.href='dashboard.php?view=inicio&err=limite';</script>"; exit;
         }
-    } else {
-        $mensaje_error = "Código no encontrado en el catálogo.";
+    } elseif ($accion == 'restar' && isset($_SESSION['carrito'][$codigo_act])) {
+        if ($_SESSION['carrito'][$codigo_act]['cantidad'] > 1) {
+            $_SESSION['carrito'][$codigo_act]['cantidad']--;
+        }
+        echo "<script>window.location.href='dashboard.php?view=inicio';</script>"; exit;
     }
 }
 
-// --- LÓGICA PARA VACIAR CARRITO ---
-if (isset($_GET['vaciar_carrito'])) {
-    $_SESSION['carrito'] = [];
-    header("Location: dashboard.php?view=inicio");
-    exit;
+// --- LÓGICA DEL ESCÁNER (AGREGAR AL CARRITO O COBRAR) ---
+if (isset($_POST['escanear_codigo'])) {
+    $codigo = trim($_POST['codigo_escaneado']);
+
+    // Si el código escaneado es la palabra mágica "COBRAR"
+    if (strtoupper($codigo) === 'COBRAR') {
+        if (!empty($_SESSION['carrito'])) {
+            $_POST['completar_venta'] = true; // Forzamos el gatillo de la venta
+        } else {
+            $mensaje_error = "El carrito está vacío, escanea productos antes de cobrar.";
+        }
+    } 
+    // Si es un código de barras normal
+    else {
+        // Buscar la paleta Y SU STOCK ACTUAL en la base de datos
+        $stmt = $conexion->prepare("
+            SELECT p.nombre, p.costo, COALESCE(i.stock, 0) as stock 
+            FROM paletasmoonsunpops p 
+            LEFT JOIN inventario i ON p.codigo = i.codigo 
+            WHERE p.codigo = ? LIMIT 1
+        ");
+        $stmt->execute([$codigo]);
+        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($producto) {
+            $cantidad_actual_en_carrito = isset($_SESSION['carrito'][$codigo]) ? $_SESSION['carrito'][$codigo]['cantidad'] : 0;
+
+            // VALIDACIÓN DE STOCK
+            if ($producto['stock'] <= 0) {
+                $mensaje_error = "¡Agotado! Ya no hay stock disponible de " . $producto['nombre'] . ".";
+            } elseif (($cantidad_actual_en_carrito + 1) > $producto['stock']) {
+                $mensaje_error = "¡Límite alcanzado! Solo tienes " . $producto['stock'] . " piezas de " . $producto['nombre'] . " en el congelador.";
+            } else {
+                // Si hay stock suficiente, le sumamos 1 o lo creamos
+                if (isset($_SESSION['carrito'][$codigo])) {
+                    $_SESSION['carrito'][$codigo]['cantidad'] += 1;
+                    
+                    // TRUCO PARA LA PILA: Lo sacamos y lo volvemos a meter para que actualice su posición al final del array
+                    $item_temp = $_SESSION['carrito'][$codigo];
+                    unset($_SESSION['carrito'][$codigo]);
+                    $_SESSION['carrito'][$codigo] = $item_temp;
+                } else {
+                    $_SESSION['carrito'][$codigo] = [
+                        'nombre' => $producto['nombre'],
+                        'precio' => $producto['costo'],
+                        'cantidad' => 1,
+                        'stock_max' => $producto['stock'] // Guardamos el límite para los botones + y -
+                    ];
+                }
+            }
+        } else {
+            $mensaje_error = "Código no encontrado en el catálogo.";
+        }
+    }
 }
 
 // --- LÓGICA PARA COMPLETAR VENTA ---
@@ -65,12 +109,13 @@ if (isset($_POST['completar_venta']) && !empty($_SESSION['carrito'])) {
             $total_venta += ($item['precio'] * $item['cantidad']);
         }
 
-        // 1. Insertar la Venta General
-        $stmt_venta = $conexion->prepare("INSERT INTO ventas (total) VALUES (?)");
-        $stmt_venta->execute([$total_venta]);
+        // 2. Insertar la Venta General (FORZANDO LA FECHA Y HORA EXACTA DE MÉXICO)
+        $fecha_actual = date('Y-m-d H:i:s');
+        $stmt_venta = $conexion->prepare("INSERT INTO ventas (total, fecha) VALUES (?, ?)");
+        $stmt_venta->execute([$total_venta, $fecha_actual]);
         $id_venta = $conexion->lastInsertId();
 
-        // 2. Insertar los Detalles y Descontar Inventario
+        // 3. Insertar los Detalles y Descontar Inventario
         $stmt_detalle = $conexion->prepare("INSERT INTO detalle_ventas (venta_id, codigo, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)");
         $stmt_inventario = $conexion->prepare("UPDATE inventario SET stock = stock - ? WHERE codigo = ?");
 
@@ -92,6 +137,7 @@ if (isset($_POST['completar_venta']) && !empty($_SESSION['carrito'])) {
 }
 
 // --- CONSULTAS PARA LAS TARJETAS (MÉTRICAS DE HOY) ---
+// Ahora $hoy siempre será la fecha correcta en México
 $hoy = date('Y-m-d');
 
 // 1. Ventas de Hoy ($)
@@ -154,7 +200,7 @@ $sabor_top = $q_top_sabor ? $q_top_sabor['nombre'] : 'Sin ventas aún';
         <div class="pos-scanner card">
             <div class="card-header"><i class="fa-solid fa-barcode"></i> Escáner de Productos</div>
             <form method="POST" action="dashboard.php?view=inicio" class="scanner-form">
-                <p class="scanner-help">Escanea el código o tecléalo y presiona Enter</p>
+                <p class="scanner-help">Escanea el código, tecléalo o escanea "COBRAR"</p>
                 <div class="scanner-input-wrap">
                     <i class="fa-solid fa-qrcode"></i>
                     <input type="text" name="codigo_escaneado" id="inputScanner" placeholder="Código de barras..." autofocus autocomplete="off" required>
@@ -185,18 +231,30 @@ $sabor_top = $q_top_sabor ? $q_top_sabor['nombre'] : 'Sin ventas aún';
                                 <th>Producto</th>
                                 <th>Precio</th>
                                 <th>Subtotal</th>
+                                <th style="text-align: center;"><i class="fa-solid fa-bolt"></i></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach($_SESSION['carrito'] as $codigo => $item): 
+                            <?php 
+                            // TRUCO PARA LA VISTA: Invertimos el array preservando las claves para que lo último aparezca arriba
+                            foreach(array_reverse($_SESSION['carrito'], true) as $codigo => $item): 
                                 $sub = $item['cantidad'] * $item['precio'];
                                 $gran_total += $sub;
                             ?>
                             <tr>
-                                <td class="c-cant"><?=$item['cantidad']?>x</td>
+                                <td class="c-cant">
+                                    <div class="cant-control">
+                                        <a href="dashboard.php?view=inicio&accion=restar&codigo=<?=$codigo?>" class="btn-cant"><i class="fa-solid fa-minus"></i></a>
+                                        <span class="cant-number"><?=$item['cantidad']?></span>
+                                        <a href="dashboard.php?view=inicio&accion=sumar&codigo=<?=$codigo?>" class="btn-cant"><i class="fa-solid fa-plus"></i></a>
+                                    </div>
+                                </td>
                                 <td><?=$item['nombre']?></td>
                                 <td>$<?=number_format($item['precio'], 2)?></td>
                                 <td class="c-sub"><strong>$<?=number_format($sub, 2)?></strong></td>
+                                <td style="text-align: center;">
+                                    <a href="dashboard.php?view=inicio&accion=eliminar&codigo=<?=$codigo?>" class="btn-del-item"><i class="fa-solid fa-xmark"></i></a>
+                                </td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -210,7 +268,7 @@ $sabor_top = $q_top_sabor ? $q_top_sabor['nombre'] : 'Sin ventas aún';
                     <span class="total-amount">$<?=number_format($gran_total, 2)?></span>
                 </div>
                 <div class="cart-actions">
-                    <a href="dashboard.php?view=inicio&vaciar_carrito=1" class="btn-clean"><i class="fa-solid fa-trash-can"></i> Vaciar</a>
+                    <a href="dashboard.php?view=inicio&accion=vaciar" class="btn-clean"><i class="fa-solid fa-trash-can"></i> Vaciar</a>
                     <form method="POST" action="dashboard.php?view=inicio" style="flex:1;">
                         <button type="submit" name="completar_venta" class="btn-checkout" <?=empty($_SESSION['carrito'])?'disabled':''?>>
                             <i class="fa-solid fa-check-double"></i> COBRAR

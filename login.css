@@ -1,15 +1,15 @@
 /* login.css */
-
-/* Variables de color: Temática "Moon & Sun" + Cremoso/Corporativo */
 :root {
-    --bg-sun: #FFF4E6;       /* Crema cálido (Luz de Sol) */
-    --bg-moon: #EBF0F9;      /* Crema azulado muy suave (Luz de Luna) */
-    --card-white: #FFFFFF;   /* Blanco puro para la tarjeta */
-    --text-dark: #1A1B2F;    /* Azul noche profundo (Cielo nocturno corporativo) */
-    --text-muted: #7A7B8C;   /* Gris azulado secundario */
-    --accent-sun: #FCAE7C;   /* Naranja durazno cremoso (Paleta de Sol) */
-    --accent-moon: #8CA6DB;  /* Azul cielo cremoso (Paleta de Luna) */
-    --input-bg: #F4F5F8;     /* Fondo neutro para los inputs */
+    --bg-main: #FCF9F5;         /* Fondo súper claro y cálido */
+    --card-white: #FFFFFF;
+    --text-dark: #2D3142;       /* Azul/Gris muy oscuro y elegante */
+    --text-muted: #9094A6;
+    --accent-sun: #FCAE7C;      /* Naranja del panel */
+    --accent-sun-hover: #F89B60;
+    --accent-moon: #8CA6DB;
+    --input-bg: #F4F6F9;        /* Gris azulado muy tenue para inputs */
+    --error-bg: #FFF0ED;
+    --error-text: #E76F51;
 }
 
 * {
@@ -20,58 +20,118 @@
 }
 
 body {
-    /* FONDO: Degradado de Sol a Luna */
-    background: linear-gradient(135deg, var(--bg-sun) 0%, var(--bg-moon) 100%);
+    background-color: var(--bg-main);
     color: var(--text-dark);
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    overflow-x: hidden;
+    overflow: hidden;
+    position: relative;
 }
 
+/* --- Decoraciones de Fondo (Efecto Premium) --- */
+.bg-shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: 0;
+    opacity: 0.6;
+}
+
+.sun-shape {
+    width: 400px;
+    height: 400px;
+    background: var(--accent-sun);
+    top: -100px;
+    right: -100px;
+}
+
+.moon-shape {
+    width: 350px;
+    height: 350px;
+    background: var(--accent-moon);
+    bottom: -100px;
+    left: -100px;
+}
+
+/* --- Tarjeta Principal --- */
 .login-wrapper {
     width: 100%;
     display: flex;
     justify-content: center;
     padding: 20px;
+    z-index: 1; /* Para que esté por encima de los brillos */
 }
 
 .login-card {
-    background: var(--card-white);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
     width: 100%;
-    max-width: 400px;
-    border-radius: 24px;
-    padding: 40px;
-    /* Sombra sutil con tono azul noche */
-    box-shadow: 0 20px 50px rgba(26, 27, 47, 0.08); 
+    max-width: 420px;
+    border-radius: 28px;
+    padding: 45px 40px;
+    box-shadow: 0 25px 50px rgba(45, 49, 66, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.8);
     text-align: center;
+    animation: slideUpFade 0.6s ease-out;
+}
+
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .login-header {
-    margin-bottom: 30px;
+    margin-bottom: 35px;
 }
 
 .brand-logo {
-    width: 80px;
+    width: 90px;
     height: auto;
-    margin-bottom: 15px;
-    border-radius: 50%; 
-    background-color: var(--input-bg);
-    padding: 10px;
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+}
+
+.brand-logo:hover {
+    transform: scale(1.05);
 }
 
 .login-header h2 {
-    font-weight: 600;
-    font-size: 1.5rem;
+    font-weight: 700;
+    font-size: 1.6rem;
     color: var(--text-dark);
+    margin-bottom: 5px;
 }
 
 .login-header p {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: var(--text-muted);
 }
 
+/* --- Alertas de Error --- */
+.error-alert {
+    background: var(--error-bg);
+    color: var(--error-text);
+    padding: 12px 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* --- Inputs --- */
 .input-group {
     position: relative;
     margin-bottom: 20px;
@@ -81,123 +141,94 @@ body {
 .input-group .icon {
     position: absolute;
     top: 50%;
-    left: 15px;
+    left: 18px;
     transform: translateY(-50%);
     color: var(--text-muted);
     font-size: 1.1rem;
+    z-index: 2;
+    transition: color 0.3s ease;
 }
 
 .input-group input {
     width: 100%;
     background-color: var(--input-bg);
     border: 2px solid transparent;
-    border-radius: 12px;
-    padding: 14px 15px 14px 45px; 
+    border-radius: 16px;
+    padding: 16px 20px 16px 50px;
     font-size: 0.95rem;
+    font-weight: 500;
     color: var(--text-dark);
     outline: none;
     transition: all 0.3s ease;
 }
 
-/* Borde color Sol al escribir */
+.input-group input::placeholder {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* Estados Focus (Igual al panel) */
 .input-group input:focus {
     border-color: var(--accent-sun);
     background-color: var(--card-white);
     box-shadow: 0 0 0 4px rgba(252, 174, 124, 0.15);
 }
 
+.input-group input:focus + .icon,
+.input-group input:focus ~ .icon {
+    color: var(--accent-sun);
+}
+
 .toggle-password {
     position: absolute;
     top: 50%;
-    right: 15px;
+    right: 18px;
     transform: translateY(-50%);
     color: var(--text-muted);
     cursor: pointer;
+    font-size: 1.1rem;
+    z-index: 2;
     transition: color 0.3s;
 }
 
 .toggle-password:hover {
-    color: var(--accent-sun);
+    color: var(--text-dark);
 }
 
-.form-options {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.85rem;
-    margin-bottom: 25px;
-}
-
-.remember-me {
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
-}
-
-.forgot-pass {
-    color: var(--accent-sun);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s;
-}
-
-.forgot-pass:hover {
-    color: var(--accent-moon);
-}
-
-/* Botón: Inicia en Sol, cambia a Luna en hover */
+/* --- Botón --- */
 .btn-login {
     width: 100%;
-    background-color: var(--accent-sun);
+    background: linear-gradient(135deg, var(--accent-sun) 0%, var(--accent-sun-hover) 100%);
     color: var(--card-white);
     border: none;
-    border-radius: 12px;
-    padding: 15px;
-    font-size: 1rem;
+    border-radius: 16px;
+    padding: 16px;
+    font-size: 1.05rem;
     font-weight: 600;
     cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
     transition: all 0.3s ease;
-    box-shadow: 0 8px 20px rgba(252, 174, 124, 0.3);
+    box-shadow: 0 10px 20px rgba(252, 174, 124, 0.25);
+    margin-top: 10px;
 }
 
 .btn-login:hover {
-    background-color: var(--accent-moon);
-    transform: translateY(-2px);
-    box-shadow: 0 12px 25px rgba(140, 166, 219, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 15px 25px rgba(252, 174, 124, 0.35);
 }
 
-/* =========================================
-   MEDIA QUERIES (OPTIMIZACIÓN PARA CELULAR)
-   ========================================= */
+.btn-login:active {
+    transform: translateY(0);
+}
+
+/* --- Responsive --- */
 @media (max-width: 480px) {
     .login-card {
-        padding: 30px 20px; 
-        border-radius: 20px;
+        padding: 40px 25px;
     }
-
-    .brand-logo {
-        width: 70px; 
-        margin-bottom: 10px;
-    }
-
-    .login-header h2 {
-        font-size: 1.3rem; 
-    }
-
-    .input-group input {
-        padding: 12px 15px 12px 40px; 
-        font-size: 0.9rem;
-    }
-
-    .form-options {
-        flex-direction: column; 
-        gap: 15px;
-    }
-
-    .btn-login {
-        padding: 12px;
-        font-size: 0.95rem;
-    }
+    .sun-shape { top: -150px; right: -150px; }
+    .moon-shape { bottom: -150px; left: -150px; }
 }

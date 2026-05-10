@@ -32,6 +32,10 @@ switch ($view) {
     case 'estadisticas':
         require 'estadisticas/estadisticas.php'; 
         break;
+
+        case 'ventas-modificadas':
+            require 'ventas-modificadas/ventas-modificadas.php'; 
+            break;
         
     case 'ventas':
         echo "<h2 style='color:var(--sun-gold)'><i class='fa-solid fa-rocket'></i> Módulo de Ventas Estelares</h2>

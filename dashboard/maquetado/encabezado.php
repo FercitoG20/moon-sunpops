@@ -132,7 +132,17 @@ if (!isset($_SESSION['usuario_id'])) {
             flex-shrink: 0; 
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
             z-index: 1000;
+            
+            /* ---- AQUÍ ESTÁ LA MAGIA PARA EL SCROLL ---- */
+            overflow-y: auto;
+            max-height: 100%;
         }
+
+        /* Ocultamos el scrollbar feo por defecto y le damos un toque estético al menú */
+        .side-menu::-webkit-scrollbar { width: 6px; }
+        .side-menu::-webkit-scrollbar-track { background: transparent; }
+        .side-menu::-webkit-scrollbar-thumb { background: rgba(255, 205, 163, 0.6); border-radius: 10px; }
+        .side-menu::-webkit-scrollbar-thumb:hover { background: var(--sun-gold); }
 
         .side-menu a { 
             display: flex; align-items: center; padding: 1rem 1.5rem; 
@@ -140,11 +150,12 @@ if (!isset($_SESSION['usuario_id'])) {
             font-size: 1.05rem; transition: 0.3s; 
             border-radius: 20px; 
             margin: 5px 15px;
+            flex-shrink: 0; /* Evita que los links se apachurren */
         }
         .side-menu a i { width: 35px; font-size: 1.2rem; color: var(--nebula-purple); transition: 0.3s; }
         .side-menu a:hover { background: rgba(255, 205, 163, 0.3); transform: translateX(5px); color: var(--sun-gold); }
         
-        .side-menu .spacer { flex: 1; } 
+        .side-menu .spacer { flex: 1; min-height: 20px; } /* min-height asegura un espacio antes del botón salir si hay scroll */
         .side-menu .btn-salir { margin-top: auto; margin-bottom: 15px; color: #e11d48; background: rgba(225, 29, 72, 0.05); border: 1px solid rgba(225, 29, 72, 0.1); }
 
         /* ----- CONTENIDO PRINCIPAL (EL ÚNICO QUE HACE SCROLL) ----- */
@@ -183,6 +194,7 @@ if (!isset($_SESSION['usuario_id'])) {
                 padding: 1.5rem 0;
                 border-radius: 0 35px 35px 0;
                 box-shadow: 10px 0 30px rgba(0,0,0,0.2);
+                /* El overflow-y se hereda, por lo que aquí también tendrá scroll */
             }
             .side-menu.toggled { left: 0; }
         }

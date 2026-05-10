@@ -31,31 +31,74 @@ elseif (isset($_GET['buscar_pedido'])) {
 }
 elseif (isset($_GET['titulo_activo']) && $_GET['titulo_activo'] != "") { $titulo_activo = $_GET['titulo_activo']; $fecha_activa = $_GET['fecha_activa'] ?? date('Y-m-d'); } 
 
+// --- LÓGICA DE AGREGAR PRODUCTO (Sincronizado con Inventario) ---
 if(isset($_POST['agregar']) && $titulo_activo != "") {
     $codigo = $_POST['codigo'];
     $cantidad = (int)$_POST['cantidad'];
     $preciov = (float)$_POST['preciov'];
+    
+    // Verificamos si este lote ya fue ingresado al stock
+    $stmt_estado = $conexion->prepare("SELECT estado_stock FROM calculo WHERE titulo = ? LIMIT 1");
+    $stmt_estado->execute([$titulo_activo]);
+    $row_est = $stmt_estado->fetch(PDO::FETCH_ASSOC);
+    $es_ingresado = ($row_est && $row_est['estado_stock'] === 'ingresado');
+
     $stmt = $conexion->prepare("SELECT id FROM calculo WHERE codigo = ? AND titulo = ?");
     $stmt->execute([$codigo, $titulo_activo]);
+    
     if($stmt->rowCount() == 0) {
         $stmt_p = $conexion->prepare("SELECT * FROM paletaslunitas WHERE codigo = ?");
         $stmt_p->execute([$codigo]);
         $p = $stmt_p->fetch(PDO::FETCH_ASSOC);
+        
         if($p) {
-            $sql = "INSERT INTO calculo (fecha, titulo, codigo, categoria, sabor, cantidad, costopz, inversion, preciov, ganaciau, ganacial, ingresob) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $conexion->prepare($sql)->execute([$fecha_activa, $titulo_activo, $codigo, $p['categoria'], $p['nombre'], $cantidad, $p['costo'], ($cantidad * $p['costo']), $preciov, ($preciov - $p['costo']), (($preciov - $p['costo']) * $cantidad), ($cantidad * $preciov)]);
+            // Si el lote ya está en inventario, la nueva paleta nace 'ingresada'
+            $estado_insert = $es_ingresado ? 'ingresado' : 'pendiente';
+
+            $sql = "INSERT INTO calculo (fecha, titulo, codigo, categoria, sabor, cantidad, costopz, inversion, preciov, ganaciau, ganacial, ingresob, estado_stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $conexion->prepare($sql)->execute([$fecha_activa, $titulo_activo, $codigo, $p['categoria'], $p['nombre'], $cantidad, $p['costo'], ($cantidad * $p['costo']), $preciov, ($preciov - $p['costo']), (($preciov - $p['costo']) * $cantidad), ($cantidad * $preciov), $estado_insert]);
+            
+            // Sumamos al stock real si aplica
+            if($es_ingresado) {
+                $conexion->prepare("INSERT INTO inventario (codigo, stock) VALUES (?, ?) ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)")->execute([$codigo, $cantidad]);
+            }
+
             // Al agregar, redirigimos manteniendo el foco
             echo "<script>window.location.href='dashboard.php?view=calculador&fecha_activa=$fecha_activa&titulo_activo=" . urlencode($titulo_activo) . "&focus=selector';</script>"; exit();
         }
     }
 }
 
+// --- LÓGICA DE ACCIONES SUMAR/RESTAR/ELIMINAR (Sincronizado con Inventario) ---
 if(isset($_GET['accion']) && isset($_GET['id'])) {
     $id = (int)$_GET['id'];
     $accion = $_GET['accion'];
-    if($accion == 'eliminar') { $conexion->prepare("DELETE FROM calculo WHERE id = ?")->execute([$id]); } 
-    elseif($accion == 'sumar') { $conexion->prepare("UPDATE calculo SET cantidad = cantidad + 1, inversion = cantidad * costopz, ganacial = ganaciau * cantidad, ingresob = cantidad * preciov WHERE id = ?")->execute([$id]); } 
-    elseif($accion == 'restar') { $conexion->prepare("UPDATE calculo SET cantidad = cantidad - 1, inversion = cantidad * costopz, ganacial = ganaciau * cantidad, ingresob = cantidad * preciov WHERE id = ? AND cantidad > 1")->execute([$id]); }
+    
+    // Obtenemos los datos antes de modificar
+    $stmt_info = $conexion->prepare("SELECT codigo, cantidad, estado_stock FROM calculo WHERE id = ?");
+    $stmt_info->execute([$id]);
+    $info = $stmt_info->fetch(PDO::FETCH_ASSOC);
+
+    if($info) {
+        $es_ingresado = ($info['estado_stock'] === 'ingresado');
+        $codigo = $info['codigo'];
+
+        if($accion == 'eliminar') { 
+            $conexion->prepare("DELETE FROM calculo WHERE id = ?")->execute([$id]); 
+            if($es_ingresado) { $conexion->prepare("UPDATE inventario SET stock = stock - ? WHERE codigo = ?")->execute([$info['cantidad'], $codigo]); }
+        } 
+        elseif($accion == 'sumar') { 
+            $conexion->prepare("UPDATE calculo SET cantidad = cantidad + 1, inversion = cantidad * costopz, ganacial = ganaciau * cantidad, ingresob = cantidad * preciov WHERE id = ?")->execute([$id]); 
+            if($es_ingresado) { $conexion->prepare("UPDATE inventario SET stock = stock + 1 WHERE codigo = ?")->execute([$codigo]); }
+        } 
+        elseif($accion == 'restar') { 
+            if($info['cantidad'] > 1) {
+                $conexion->prepare("UPDATE calculo SET cantidad = cantidad - 1, inversion = cantidad * costopz, ganacial = ganaciau * cantidad, ingresob = cantidad * preciov WHERE id = ?")->execute([$id]); 
+                if($es_ingresado) { $conexion->prepare("UPDATE inventario SET stock = stock - 1 WHERE codigo = ?")->execute([$codigo]); }
+            }
+        }
+    }
+    
     $ruta = "dashboard.php?view=calculador&fecha_activa=$fecha_activa" . ($titulo_activo != "" ? "&titulo_activo=" . urlencode($titulo_activo) : "");
     echo "<script>window.location.href='$ruta';</script>"; exit();
 }

@@ -21,6 +21,9 @@ CREATE TABLE `calculo` (
   CONSTRAINT `calculo_ibfk_3` FOREIGN KEY (`sabor`) REFERENCES `paletaslunitas` (`nombre`) ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+ALTER TABLE `calculo` 
+ADD COLUMN `estado_stock` ENUM('pendiente', 'ingresado') NOT NULL DEFAULT 'pendiente' AFTER `ingresob`;
+
 
 
 CREATE TABLE `paletasmoonsunpops` (
@@ -65,3 +68,35 @@ CREATE TABLE `usuarios` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `usuario` (`usuario`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `ventas` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `fecha` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `total` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `inventario` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `codigo` varchar(100) NOT NULL,
+  `stock` int(11) NOT NULL DEFAULT 0,
+  `ultima_act` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `codigo` (`codigo`),
+  CONSTRAINT `inventario_ibfk_1` FOREIGN KEY (`codigo`) REFERENCES `paletasmoonsunpops` (`codigo`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `detalle_ventas` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `venta_id` int(11) NOT NULL,
+  `codigo` varchar(100) NOT NULL,
+  `cantidad` int(11) NOT NULL,
+  `precio_unitario` decimal(10,2) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `venta_id` (`venta_id`),
+  KEY `codigo` (`codigo`),
+  CONSTRAINT `detalle_ventas_ibfk_1` FOREIGN KEY (`venta_id`) REFERENCES `ventas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `detalle_ventas_ibfk_2` FOREIGN KEY (`codigo`) REFERENCES `paletasmoonsunpops` (`codigo`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
